@@ -22,11 +22,18 @@ extension FlickrClient {
     func getPhotos(pin: Pin, completionHandler: (success: Bool, photos: [[String: AnyObject]]?, totalPhotos: Int, totalPages: Int, errorString: String?) -> Void) {
         
         // Set random page for query
-        var randomPage = 3
-        if let numberOfPages = pin.totalPages {
-            randomPage = Int((arc4random_uniform(UInt32(numberOfPages as Int)))) + 1
-        }
         
+        var randomPage = 1
+        if let numberOfPages = pin.totalPages {
+            let numberOfPagesInt = UInt32(numberOfPages as Int)
+            randomPage = Int(arc4random_uniform(numberOfPagesInt))
+            
+            // Somethings seems to be up with Flickr API. If we're requesting a page above a high number, it seems to be returning the same photos. More info in submit notes. To avoid this, we'll simply generating a pagenumber inside the scope of 200 pages
+            if randomPage > 200 {
+                randomPage = Int(arc4random_uniform(200))
+            }
+        }
+
         print("Random page: \(randomPage)")
         
         // Methods
@@ -117,6 +124,7 @@ extension FlickrClient {
         let top_right_long = min(longitude + Constants.BOUNDINGBOX_WIDTH_HALF, Constants.LONG_MAX)
         let top_right_lat = min(latitude + Constants.BOUNDINGBOX_HEIGHT_HALF, Constants.LAT_MAX)
         
+        print("\(bottom_left_long),\(bottom_left_lat),\(top_right_long),\(top_right_lat)")
         return "\(bottom_left_long),\(bottom_left_lat),\(top_right_long),\(top_right_lat)"
     }
 }
